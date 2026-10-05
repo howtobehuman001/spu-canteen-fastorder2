@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPU Canteen FastOrder - สั่งอาหารล่วงหน้า ม.ศรีปทุม บางเขน</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body{font-family:'Prompt',sans-serif;}</style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+<header class="bg-blue-900 text-white shadow-md sticky top-0 z-50">
+<div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+<div><h1 class="text-xl font-bold">🎓 SPU Canteen FastOrder</h1><p class="text-xs text-blue-200">มหาวิทยาลัยศรีปทุม วิทยาเขตบางเขน</p></div>
+<button onclick="openCart()" class="bg-blue-700 hover:bg-blue-600 px-3.5 py-2 rounded-xl text-sm font-medium">🛒 ตะกร้า <span id="cart-badge" class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
+</div></header>
+
+<main class="max-w-4xl mx-auto px-4 py-6">
+<section class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800 text-white rounded-3xl p-6 mb-8 shadow-xl">
+<span class="bg-blue-500/30 text-blue-200 text-xs px-3 py-1 rounded-full inline-block mb-3">⚡ ไม่ต้องรอคิวตอนเที่ยง</span>
+<h2 class="text-2xl sm:text-3xl font-extrabold mb-2">หิวตอนพักเที่ยง? สั่งล่วงหน้าได้เลย!</h2>
+<p class="text-sm text-blue-100 mb-6">เลือกโซนโรงอาหารและเมนูโปรดใน SPU บางเขน แล้วเลือกเวลารับอาหาร</p>
+<div class="flex flex-wrap gap-2.5">
+<button onclick="filterCanteen('all')" class="canteen-btn bg-white text-blue-900 px-4 py-2.5 rounded-2xl font-bold">✨ ทั้งหมด</button>
+<button onclick="filterCanteen('cool')" class="canteen-btn bg-blue-950/60 text-white px-4 py-2.5 rounded-2xl">❄️ โรงอาหารเย็น</button>
+<button onclick="filterCanteen('hot')" class="canteen-btn bg-blue-950/60 text-white px-4 py-2.5 rounded-2xl">🔥 โรงอาหารร้อน</button>
+</div></section>
+
+<section>
+<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">📌 เมนูแนะนำและร้านเด็ด SPU</h3><span id="item-count" class="text-xs text-gray-500"></span></div>
+<div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-5"></div>
+</section>
+</main>
+
+<div id="cart-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-end">
+<div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col p-6 overflow-y-auto">
+<div class="flex justify-between items-center mb-4 border-b pb-3"><h3 class="text-xl font-bold">🛒 ตะกร้าอาหาร</h3><button onclick="closeCart()" class="text-2xl">&times;</button></div>
+<div class="mb-5 bg-blue-50 p-4 rounded-2xl">
+<label class="block text-xs font-bold mb-2">⏱️ เลือกเวลารับอาหาร</label>
+<select id="pickup-time" class="w-full border rounded-xl p-2.5">
+<option>11:30 น.</option><option>12:00 น.</option><option>12:30 น.</option><option>13:00 น.</option>
+</select></div>
+<div id="cart-items" class="flex-1 space-y-3 mb-4"></div>
+<div class="border-t pt-4">
+<div class="flex justify-between font-bold mb-4"><span>ยอดรวม:</span><span id="cart-total" class="text-blue-600 text-xl">0 บาท</span></div>
+<button onclick="checkout()" class="w-full bg-blue-600 text-white py-3.5 rounded-2xl font-bold">🚀 ยืนยันการสั่งอาหาร</button>
+</div></div></div>
+
+<script>
+const menus=[
+{id:1,name:"ก๋วยเตี๋ยวต้มยำหมูสับไข่มะตูม",store:"ก๋วยเตี๋ยวไก่โรงเย็น",canteen:"cool",price:50,img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60"},
+{id:2,name:"ข้าวหน้าเนื้อสไลด์ไข่ดองซอสญี่ปุ่น",store:"Onsen Express",canteen:"cool",price:65,img:"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"},
+{id:3,name:"ข้าวมันไก่ตอนเนื้อนุ่มพิเศษ",store:"ข้าวมันไก่สิงคโปร์",canteen:"cool",price:55,img:"https://images.unsplash.com/photo-1604908176997-125f2596f37c?w=500&auto=format&fit=crop&q=60"},
+{id:4,name:"ข้าวกะเพราหมูสับไข่ดาวกรอบ",store:"ตามสั่งป้าอ้วน",canteen:"hot",price:50,img:"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60"},
+{id:5,name:"ชาบูหมาล่าเสียบไม้",store:"หมาล่า SPU ซิ่ง",canteen:"hot",price:100,img:"https://images.unsplash.com/photo-1555126634-323283e090fa?w=500&auto=format&fit=crop&q=60"},
+{id:6,name:"ข้าวยำไก่แซ่บซี้ดสะเดิด",store:"อาหารฮาลาล SPU",canteen:"hot",price:50,img:"https://images.unsplash.com/photo-1626804475297-41608ea09aeb?w=500&auto=format&fit=crop&q=60"}];
+let cart=[];
+
+function renderMenus(filter='all'){
+const grid=document.getElementById('menu-grid'); grid.innerHTML='';
+const filtered=filter==='all'?menus:menus.filter(m=>m.canteen===filter);
+document.getElementById('item-count').innerText=`แสดง ${filtered.length} เมนู`;
+filtered.forEach(item=>{
+grid.innerHTML+=`<div class="bg-white rounded-3xl shadow border border-gray-100 overflow-hidden">
+<img src="${item.img}" class="w-full h-40 object-cover" alt="${item.name}">
+<div class="p-4"><span class="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg">${item.canteen==='cool'?'❄️ โรงเย็น':'🔥 โรงร้อน'}</span>
+<span class="text-xs text-gray-400 block mt-2">🏪 ${item.store}</span><h4 class="font-bold mt-1">${item.name}</h4>
+<p class="text-blue-600 font-bold text-lg mt-2">${item.price} บาท</p>
+<button onclick="addToCart(${item.id})" class="w-full bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 py-2.5 rounded-2xl text-sm font-bold mt-3">+ เพิ่มลงตะกร้า</button></div></div>`});
+}
+function filterCanteen(type){renderMenus(type)}
+function addToCart(id){const p=menus.find(m=>m.id===id),x=cart.find(i=>i.id===id);x?x.qty++:cart.push({...p,qty:1});updateBadge()}
+function updateBadge(){document.getElementById('cart-badge').innerText=cart.reduce((s,i)=>s+i.qty,0)}
+function openCart(){
+const c=document.getElementById('cart-items');c.innerHTML='';
+if(!cart.length)c.innerHTML='<div class="text-center py-12 text-gray-400 text-sm">🛒<br>ตะกร้ายังว่างอยู่</div>';
+cart.forEach((i,n)=>c.innerHTML+=`<div class="flex justify-between bg-gray-50 p-3.5 rounded-2xl"><div><b class="text-sm">${i.name}</b><p class="text-xs text-gray-500">${i.price} ฿ × ${i.qty}</p></div><div><b class="text-blue-600">${i.price*i.qty} ฿</b><button onclick="removeItem(${n})" class="text-red-500 ml-2">&times;</button></div></div>`);
+document.getElementById('cart-total').innerText=cart.reduce((s,i)=>s+i.price*i.qty,0)+' บาท';
+document.getElementById('cart-modal').classList.remove('hidden')}
+function closeCart(){document.getElementById('cart-modal').classList.add('hidden')}
+function removeItem(i){cart.splice(i,1);updateBadge();openCart()}
+function checkout(){if(!cart.length)return alert('กรุณาเลือกอาหารอย่างน้อย 1 เมนู');const t=document.getElementById('pickup-time').value,total=cart.reduce((s,i)=>s+i.price*i.qty,0);alert(`🎉 สั่งอาหารสำเร็จ!\\n\\n⏰ เวลารับ: ${t}\\n💵 ยอดรวม: ${total} บาท\\n\\nกรุณาไปรับอาหารตามเวลาที่เลือก`);cart=[];updateBadge();closeCart()}
+renderMenus();
+</script>
+</body>
+</html>
